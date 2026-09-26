@@ -1,0 +1,50 @@
+# A made-up person's plan. Copy it to private/ and edit there for your own numbers.
+name: Sam (demo)
+start: 2027-01
+horizon_months: 60
+
+settings:
+  investment_return_pct: 7
+  cash_yield_pct: 3.5
+  annual_raise_pct: 2
+  cash_floor: 2000
+  emergency_fund: 9000
+  roth_annual_limit: 7500
+  extra_debt_min_apr: 8
+
+balances:
+  cash: 6000
+  retirement: 900
+
+retirement:
+  gross_salary: 72000
+  contribution_pct: 6
+  match_pct: 50
+  match_up_to_pct: 6
+  marginal_tax_pct: 28
+
+income:
+  - {name: paycheck, amount: 4400}
+
+expenses:
+  - {name: rent, amount: 1400, end: 2027-05}
+  - {name: rent (new place), amount: 1650, start: 2027-06}
+  - {name: utilities, amount: 140}
+  - {name: food, amount: 450}
+  - {name: phone, amount: 55}
+  - {name: car insurance, amount: 120}
+  - {name: gas, amount: 90}
+  - {name: subscriptions, amount: 35}
+  - {name: fun money, amount: 200}
+
+debts:
+  - {name: credit card, balance: 4800, apr: 23.9, payment: 150}
+  - {name: car loan, balance: 14200, apr: 6.9, payment: 410}
+  - {name: student loans, balance: 22000, apr: 5.0, payment: 260}
+
+one_time:
+  - {name: tax refund, month: 2027-04, amount: 900}
+  - {name: moving costs, month: 2027-06, amount: -800}
+  - {name: trip, month: 2027-09, amount: -2000}
+
+priorities: [extra_debt, emergency_fund, roth, brokerage]

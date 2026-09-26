@@ -1,0 +1,8 @@
+name: Broken
+start: 2027-13
+horizon_months: 12
+income:
+  - {name: paycheck, amount: 3000}
+debts:
+  - {name: card, balance: 1000, apr: lots, payment: 50}
+favourite_colour: blue
