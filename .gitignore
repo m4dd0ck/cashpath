@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+dist/
+# your own plans live here and never leave the machine
+private/
