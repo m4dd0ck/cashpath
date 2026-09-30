@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from cashpath.plan import Plan
+from cashpath.priorities import Allocation, apply_priorities
 from cashpath.state import State
 from cashpath.units import add_months, cents, format_month
 
@@ -59,15 +60,6 @@ class Forecast:
     warnings: tuple[str, ...]
 
 
-@dataclass(frozen=True)
-class Allocation:
-    """Where leftover cash went in one month."""
-
-    to_extra_debt: Decimal = ZERO
-    to_roth: Decimal = ZERO
-    to_brokerage: Decimal = ZERO
-
-
 def forecast(plan: Plan) -> Forecast:
     """Run the plan month by month over its horizon."""
     state = State.from_plan(plan)
@@ -87,9 +79,11 @@ def _run_month(plan: Plan, state: State, month: dt.date, warnings: list[str]) ->
     one_time = sum((item.amount for item in plan.one_time if item.month == month), ZERO)
     state.cash += take_home - expenses + one_time
     debt_payments = _pay_debts(plan, state, month, warnings)
-    allocation = Allocation()
     if state.cash < 0:
         warnings.append(f"{format_month(month)}: cash short by ${-state.cash:,.2f}")
+        allocation = Allocation()
+    else:
+        allocation = apply_priorities(plan, state, month)
     return _row(month, state, take_home, expenses + debt_payments, one_time, allocation)
 
 
