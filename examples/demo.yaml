@@ -38,7 +38,7 @@ expenses:
   - {name: fun money, amount: 200}
 
 debts:
-  - {name: credit card, balance: 4800, apr: 23.9, payment: 150}
+  - {name: credit card, balance: 7800, apr: 23.9, payment: 150}
   - {name: car loan, balance: 14200, apr: 6.9, payment: 410}
   - {name: student loans, balance: 22000, apr: 5.0, payment: 260}
 
