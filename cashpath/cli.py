@@ -1,5 +1,8 @@
-"""Command-line interface: print a forecast for a plan file."""
+"""Command-line interface: print a forecast, or open the Streamlit app, for a plan file."""
 
+import os
+import subprocess
+import sys
 from decimal import Decimal
 from pathlib import Path
 from typing import Annotated
@@ -11,13 +14,14 @@ from rich.table import Table
 
 from cashpath.engine import Forecast, forecast
 from cashpath.errors import PlanError
-from cashpath.plan import DEMO_PLAN, Plan, load_plan
+from cashpath.plan import DEMO_PLAN, PLAN_ENV, Plan, load_plan
 from cashpath.report import snapshots
 from cashpath.units import format_month
 
 app = typer.Typer(help="Budget forecasts from one YAML plan.", add_completion=False)
 console = Console()
 error_console = Console(stderr=True)
+APP_SCRIPT = Path(__file__).resolve().parent.parent / "streamlit_app.py"
 
 PlanPath = Annotated[
     Path | None,
@@ -35,6 +39,18 @@ def forecast_command(plan_path: PlanPath = None) -> None:
     """Print debt-free dates, balance snapshots and warnings for a plan."""
     result = forecast(load_plan_or_exit(plan_path or DEMO_PLAN))
     print_forecast(result)
+
+
+@app.command("app")
+def app_command(plan_path: PlanPath = None) -> None:
+    """Open the Streamlit app on a plan. Your plan file is read locally and never uploaded."""
+    env = dict(os.environ)
+    if plan_path is not None:
+        load_plan_or_exit(plan_path)
+        env[PLAN_ENV] = str(plan_path.resolve())
+    command = [sys.executable, "-m", "streamlit", "run", str(APP_SCRIPT)]
+    completed = subprocess.run(command, env=env, check=False)
+    raise typer.Exit(code=completed.returncode)
 
 
 def load_plan_or_exit(path: Path) -> Plan:

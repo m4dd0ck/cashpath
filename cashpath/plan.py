@@ -20,6 +20,8 @@ from cashpath.units import (
 )
 
 DEMO_PLAN = Path(__file__).resolve().parent.parent / "examples" / "demo.yaml"
+# The app reads its plan path from here; `cashpath app PLAN` sets it.
+PLAN_ENV = "CASHPATH_PLAN"
 
 Priority = Literal["extra_debt", "emergency_fund", "roth", "brokerage"]
 PRIORITIES: tuple[Priority, ...] = ("extra_debt", "emergency_fund", "roth", "brokerage")

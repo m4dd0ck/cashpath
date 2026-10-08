@@ -20,6 +20,7 @@ cashpath = "cashpath.cli:app"
 [dependency-groups]
 dev = [
     "mypy>=1.13",
+    "pandas-stubs>=3.0.5.260914",
     "pytest>=8",
     "ruff>=0.8",
     "types-pyyaml>=6",
