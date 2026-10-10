@@ -132,8 +132,8 @@ def _pay_debts(plan: Plan, state: State, month: dt.date, warnings: list[str]) ->
         elif owed - payment > balance and debt.name not in state.growing_debts:
             state.growing_debts.add(debt.name)
             warnings.append(
-                f"{debt.name}: the ${debt.payment:,.2f} payment does not cover interest, "
-                "so the balance grows"
+                f"{debt.name}: the ${debt.payment:,.2f} scheduled payment does not cover "
+                "the interest"
             )
     return paid
 

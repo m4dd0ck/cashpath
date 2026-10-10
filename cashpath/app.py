@@ -3,7 +3,9 @@
 import csv
 import hashlib
 import io
+import math
 import os
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -42,8 +44,10 @@ def main() -> None:
     prefix = f"{digest}-{st.session_state.get('reset_count', 0)}-"
     controls = sidebar_controls(saved, prefix)
 
-    forecast_tab, ledger_tab = st.tabs(["Forecast", "Month by month"])
-    whatif = whatif_or_saved(saved, controls)
+    forecast_tab, edit_tab, ledger_tab = st.tabs(["Forecast", "Edit plan", "Month by month"])
+    with edit_tab:
+        tables = edit_tables(saved, prefix)
+    whatif = whatif_or_saved(saved, controls, tables)
     saved_result, whatif_result = forecast(saved), forecast(whatif)
     changed = whatif != saved
 
@@ -154,6 +158,82 @@ def sidebar_controls(saved: Plan, prefix: str) -> Controls:
     )
 
 
+MONTH_COLUMN = st.column_config.TextColumn(help="YYYY-MM, or blank", validate=r"^\d{4}-\d{2}$")
+NAME_COLUMN = st.column_config.TextColumn(required=True)
+DOLLARS = st.column_config.NumberColumn(format="dollar", min_value=0)
+EDITABLE_TABLES: dict[str, tuple[str, dict[str, Any]]] = {
+    "income": (
+        "Income (take-home after tax, before 401k)",
+        {"name": NAME_COLUMN, "amount": DOLLARS, "start": MONTH_COLUMN, "end": MONTH_COLUMN},
+    ),
+    "expenses": (
+        "Expenses (monthly)",
+        {"name": NAME_COLUMN, "amount": DOLLARS, "start": MONTH_COLUMN, "end": MONTH_COLUMN},
+    ),
+    "debts": (
+        "Debts",
+        {
+            "name": NAME_COLUMN,
+            "balance": DOLLARS,
+            "apr": st.column_config.NumberColumn("APR %", min_value=0, max_value=100),
+            "payment": DOLLARS,
+        },
+    ),
+    "one_time": (
+        "One-time items (+ money in, - money out)",
+        {
+            "name": NAME_COLUMN,
+            "month": st.column_config.TextColumn(help="YYYY-MM", validate=r"^\d{4}-\d{2}$"),
+            "amount": st.column_config.NumberColumn(format="dollar"),
+        },
+    ),
+}
+
+
+def edit_tables(saved: Plan, prefix: str) -> dict[str, list[dict[str, Any]]]:
+    """One editable table per plan list; returns the edited rows keyed by plan field."""
+    st.caption(
+        "Edit, add or delete rows. Edits feed the what-if; download it from the sidebar to "
+        "keep them. A changed amount is two rows: the old one with an end month, the new one "
+        "with a start month."
+    )
+    tables = {}
+    for field, (title, columns) in EDITABLE_TABLES.items():
+        st.subheader(title)
+        frame = pd.DataFrame(_editor_rows(saved, field), columns=list(columns))
+        edited = st.data_editor(
+            frame,
+            num_rows="dynamic",
+            hide_index=True,
+            column_config=columns,
+            key=prefix + field,
+        )
+        tables[field] = [
+            {str(key): None if _is_blank(value) else value for key, value in row.items()}
+            for row in edited.to_dict("records")
+        ]
+    return tables
+
+
+def _editor_rows(saved: Plan, field: str) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = saved.model_dump(mode="python")[field]
+    return [
+        {
+            key: float(value)
+            if isinstance(value, Decimal)
+            else format_month(value)
+            if isinstance(value, date)
+            else value
+            for key, value in row.items()
+        }
+        for row in rows
+    ]
+
+
+def _is_blank(value: Any) -> bool:
+    return value is None or value is pd.NA or (isinstance(value, float) and math.isnan(value))
+
+
 def whatif_or_saved(
     saved: Plan, controls: Controls, tables: dict[str, list[dict[str, Any]]] | None = None
 ) -> Plan:
@@ -171,7 +251,8 @@ def theme_mode() -> Mode:
 
 
 def _money(value: Decimal) -> str:
-    return f"${value:,.0f}"
+    sign = "-" if value < 0 else ""
+    return f"{sign}${abs(value):,.0f}"
 
 
 def show_forecast(saved: Forecast, whatif: Forecast, changed: bool) -> None:

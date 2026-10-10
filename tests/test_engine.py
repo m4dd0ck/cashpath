@@ -133,9 +133,7 @@ def test_negative_cash_month_is_flagged() -> None:
 
 def test_payment_below_interest_is_flagged_once() -> None:
     result = forecast(make_plan(debts=[debt("card", 10000, 24, 100)]))
-    assert result.warnings == (
-        "card: the $100.00 payment does not cover interest, so the balance grows",
-    )
+    assert result.warnings == ("card: the $100.00 scheduled payment does not cover the interest",)
     assert result.rows[-1].debts["card"] > 10000
 
 

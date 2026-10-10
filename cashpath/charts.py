@@ -4,12 +4,15 @@ Colors come from the dataviz reference palette: categorical slots in fixed order
 plan in the muted neutral so the what-if line carries the emphasis.
 """
 
+import datetime as dt
+from collections.abc import Iterator
 from typing import Literal
 
 import altair as alt
 import pandas as pd
 
-from cashpath.engine import Forecast
+from cashpath.engine import Forecast, MonthRow
+from cashpath.units import add_months
 
 Mode = Literal["light", "dark"]
 
@@ -40,6 +43,14 @@ BASELINE = {"light": "#c3c2b7", "dark": "#383835"}
 MONEY_FORMAT = "$,.0f"
 
 
+def _dated_rows(result: Forecast) -> Iterator[tuple[str, MonthRow]]:
+    """Opening balances on the first day, each month's row on its last day."""
+    # Reason: opening and month-one rows share a month; plotting both there draws a false cliff.
+    yield result.opening.month.isoformat(), result.opening
+    for row in result.rows:
+        yield (add_months(row.month, 1) - dt.timedelta(days=1)).isoformat(), row
+
+
 def _hover_layers(frame: pd.DataFrame, series: list[str], mode: Mode) -> list[alt.Chart]:
     """Crosshair rule with a tooltip listing every series for the hovered month."""
     hover = alt.selection_point(fields=["month"], nearest=True, on="pointerover", empty=False)
@@ -49,7 +60,7 @@ def _hover_layers(frame: pd.DataFrame, series: list[str], mode: Mode) -> list[al
         .encode(
             x="month:T",
             opacity=alt.condition(hover, alt.value(1), alt.value(0)),
-            tooltip=[alt.Tooltip("month:T", format="%b %Y")]
+            tooltip=[alt.Tooltip("month:T", title="date", format="%b %-d, %Y")]
             + [
                 # Reason: Vega reads dots in a field name as nesting, so escape them.
                 alt.Tooltip(
@@ -106,9 +117,9 @@ def net_worth_chart(saved: Forecast, whatif: Forecast | None, mode: Mode) -> alt
     runs = [("Saved plan", saved)] + ([("What-if", whatif)] if whatif is not None else [])
     frame = pd.DataFrame(
         [
-            {"month": row.month.isoformat(), "series": name, "value": float(row.net_worth)}
+            {"month": date, "series": name, "value": float(row.net_worth)}
             for name, result in runs
-            for row in (result.opening, *result.rows)
+            for date, row in _dated_rows(result)
         ]
     )
     colors = [MUTED, SERIES[mode][0]] if whatif is not None else [SERIES[mode][0]]
@@ -124,8 +135,7 @@ def debt_chart(result: Forecast, mode: Mode) -> alt.LayerChart:
     if len(folded) == 1:
         shown, folded = names, []
     records = []
-    for row in (result.opening, *result.rows):
-        month = row.month.isoformat()
+    for month, row in _dated_rows(result):
         records += [
             {"month": month, "series": name, "value": float(row.debts[name])} for name in shown
         ]

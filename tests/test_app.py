@@ -54,3 +54,9 @@ def test_local_plan_from_environment_is_offered(
     assert not app.exception
     assert app.sidebar.radio[0].value == "Local file: mine.yaml"
     assert metric_value(app, "Net worth in 1 year") == "$12,000"
+
+
+def test_untouched_editors_leave_the_what_if_equal_to_the_saved_plan() -> None:
+    app = run_app()
+    assert len(app.tabs) == 3
+    assert all(not metric.delta for metric in app.metric)
