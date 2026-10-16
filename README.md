@@ -4,6 +4,9 @@ A budget forecast from one YAML plan: month-by-month cash, debts, 401k, Roth, br
 worth, with debt-free dates and a priority list for leftover money. Python engine, Typer CLI,
 Streamlit app with what-if comparison.
 
+**Live demo: [cashpath.streamlit.app](https://cashpath.streamlit.app)** (a made-up plan; upload your own
+YAML to try it, nothing is stored)
+
 ![Net worth: saved plan vs what-if](assets/networth.png)
 
 *The demo plan (grey) against a what-if that raises the 401k from 6% to 12% of salary (blue):
