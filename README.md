@@ -32,7 +32,7 @@ uv run cashpath forecast private/me.yaml     # your plan
 uv run cashpath app private/me.yaml          # the Streamlit app on your plan
 ```
 
-`private/` is git-ignored. Copy `examples/demo.yaml` there and edit it; your numbers never leave
+`private/` is git-ignored. Copy `cashpath/demo.yaml` there and edit it; your numbers never leave
 the machine. In the app you can also upload a plan, which is kept in memory only.
 
 ```

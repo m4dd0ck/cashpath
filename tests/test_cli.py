@@ -5,8 +5,8 @@ from types import SimpleNamespace
 import pytest
 from typer.testing import CliRunner
 
-from cashpath.cli import app
-from cashpath.plan import PLAN_ENV
+from cashpath.cli import APP_SCRIPT, app
+from cashpath.plan import DEMO_PLAN, PLAN_ENV
 
 FIXTURES = Path(__file__).parent / "fixtures"
 runner = CliRunner()
@@ -48,13 +48,12 @@ def test_app_command_runs_streamlit_with_the_plan_path(
         return SimpleNamespace(returncode=0)
 
     monkeypatch.setattr(subprocess, "run", fake_run)
-    plan = Path("examples/demo.yaml")
-    result = runner.invoke(app, ["app", str(plan)])
+    result = runner.invoke(app, ["app", str(DEMO_PLAN)])
     assert result.exit_code == 0
     command, env = calls[0]
     assert command[1:4] == ["-m", "streamlit", "run"]
-    assert command[4].endswith("streamlit_app.py")
-    assert env[PLAN_ENV] == str(plan.resolve())
+    assert command[4] == str(APP_SCRIPT)
+    assert env[PLAN_ENV] == str(DEMO_PLAN)
 
 
 def test_app_command_refuses_a_bad_plan() -> None:

@@ -353,3 +353,7 @@ def ledger_csv(records: list[dict[str, str | Decimal]]) -> str:
     writer.writeheader()
     writer.writerows(records)
     return buffer.getvalue()
+
+
+if __name__ == "__main__":
+    main()

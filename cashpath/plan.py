@@ -19,7 +19,8 @@ from cashpath.units import (
     format_month,
 )
 
-DEMO_PLAN = Path(__file__).resolve().parent.parent / "examples" / "demo.yaml"
+# The demo ships inside the package so an installed copy finds it too.
+DEMO_PLAN = Path(__file__).resolve().with_name("demo.yaml")
 # The app reads its plan path from here; `cashpath app PLAN` sets it.
 PLAN_ENV = "CASHPATH_PLAN"
 

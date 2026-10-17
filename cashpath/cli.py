@@ -21,7 +21,8 @@ from cashpath.units import format_month
 app = typer.Typer(help="Budget forecasts from one YAML plan.", add_completion=False)
 console = Console()
 error_console = Console(stderr=True)
-APP_SCRIPT = Path(__file__).resolve().parent.parent / "streamlit_app.py"
+# Streamlit runs the module as a script; it is inside the package so installed copies have it.
+APP_SCRIPT = Path(__file__).resolve().with_name("app.py")
 
 PlanPath = Annotated[
     Path | None,

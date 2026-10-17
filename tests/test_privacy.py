@@ -3,7 +3,8 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-ALLOWED_DIRS = {"examples", "tests", ".github"}
+ALLOWED_DIRS = {"tests", ".github"}
+ALLOWED_FILES = {Path("cashpath/demo.yaml")}
 SKIPPED_DIRS = {".git", ".venv", "private", ".mypy_cache", ".pytest_cache", ".ruff_cache"}
 
 
@@ -14,6 +15,7 @@ def test_yaml_files_live_only_in_allowed_folders() -> None:
         for path in ROOT.rglob(pattern)
         if not SKIPPED_DIRS.intersection(path.relative_to(ROOT).parts)
         and path.relative_to(ROOT).parts[0] not in ALLOWED_DIRS
+        and path.relative_to(ROOT) not in ALLOWED_FILES
     ]
     assert stray == []
 
