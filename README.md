@@ -64,6 +64,51 @@ Net worth counts cash and investments minus debt, not cars or homes.
 Warnings: none
 ```
 
+## Simulate
+
+`cashpath simulate` runs a plan twice, as written and with one recurring monthly change, and
+prints the two side by side. The change is extra income, extra spending, or both, from `--start`
+(default: the plan's first month) to `--end` (default: no end). Income is take-home, like every
+income row, and gets the annual raise.
+
+```bash
+uv run cashpath simulate --income 3000                       # the demo plan
+uv run cashpath simulate private/me.yaml --income 3000 --expense 400 --start 2027-03 --end 2027-12
+```
+
+```
+$ uv run cashpath simulate --income 3000
+cashpath: Sam (demo)   2027-01 to 2031-12
+Simulation: +$3,000/mo income from 2027-01
+
+Debt-free dates
+┏━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ debt          ┃   APR ┃                        plan ┃                  simulation ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ credit card   │ 23.9% │                     2027-04 │                     2027-01 │
+│ car loan      │  6.9% │                     2030-03 │                     2030-03 │
+│ student loans │  5.0% │ after 2031-12 (10,552 left) │ after 2031-12 (10,552 left) │
+└───────────────┴───────┴─────────────────────────────┴─────────────────────────────┘
+Net worth
+┏━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━┓
+┃          ┃    plan ┃ simulation ┃   change ┃
+┡━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━┩
+│ start    │ -37,100 │    -37,100 │        0 │
+│ 3 months │ -31,240 │    -22,129 │   +9,111 │
+│ 6 months │ -25,249 │     -6,963 │  +18,285 │
+│ 1 year   │ -16,231 │     20,889 │  +37,121 │
+│ 2 years  │   7,901 │     85,607 │  +77,706 │
+│ 3 years  │  34,892 │    156,895 │ +122,003 │
+│ 5 years  │  98,441 │    321,269 │ +222,828 │
+└──────────┴─────────┴────────────┴──────────┘
+Net worth counts cash and investments minus debt, not cars or homes.
+
+Warnings (simulation): none
+```
+
+The car loan and student loans keep their dates because the demo only prepays debts at 8% APR
+or more (`extra_debt_min_apr`); the extra money goes to the emergency fund, Roth and brokerage.
+
 ## The app
 
 - **Sidebar**: plan source (demo, upload, or the file passed to `cashpath app`), sliders for the

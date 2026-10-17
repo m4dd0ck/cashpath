@@ -59,3 +59,28 @@ def test_app_command_runs_streamlit_with_the_plan_path(
 def test_app_command_refuses_a_bad_plan() -> None:
     result = runner.invoke(app, ["app", str(FIXTURES / "bad_plan.yaml")])
     assert result.exit_code == 2
+
+
+def test_simulate_prints_plan_and_simulation_side_by_side() -> None:
+    result = runner.invoke(app, ["simulate", "--income", "3000"])
+    assert result.exit_code == 0
+    assert "Simulation: +$3,000/mo income from 2027-01" in result.output
+    assert "Net worth" in result.output
+    assert "change" in result.output
+
+
+def test_simulate_without_a_change_exits_2() -> None:
+    result = runner.invoke(app, ["simulate"])
+    assert result.exit_code == 2
+    assert "--income, --expense or both" in result.output
+
+
+def test_simulate_refuses_a_start_before_the_plan() -> None:
+    result = runner.invoke(app, ["simulate", "--income", "100", "--start", "2020-01"])
+    assert result.exit_code == 2
+    assert "before the plan starts" in result.output
+
+
+def test_simulate_refuses_a_bad_plan() -> None:
+    result = runner.invoke(app, ["simulate", str(FIXTURES / "bad_plan.yaml"), "--income", "1"])
+    assert result.exit_code == 2

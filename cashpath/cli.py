@@ -16,11 +16,13 @@ from cashpath.engine import Forecast, forecast
 from cashpath.errors import PlanError
 from cashpath.plan import DEMO_PLAN, PLAN_ENV, Plan, load_plan
 from cashpath.report import snapshots
+from cashpath.simulate import Simulation, describe_change, parse_change, simulate
 from cashpath.units import format_month
 
 app = typer.Typer(help="Budget forecasts from one YAML plan.", add_completion=False)
 console = Console()
 error_console = Console(stderr=True)
+NET_WORTH_NOTE = "Net worth counts cash and investments minus debt, not cars or homes.\n"
 # Streamlit runs the module as a script; it is inside the package so installed copies have it.
 APP_SCRIPT = Path(__file__).resolve().with_name("app.py")
 
@@ -40,6 +42,31 @@ def forecast_command(plan_path: PlanPath = None) -> None:
     """Print debt-free dates, balance snapshots and warnings for a plan."""
     result = forecast(load_plan_or_exit(plan_path or DEMO_PLAN))
     print_forecast(result)
+
+
+@app.command("simulate")
+def simulate_command(
+    plan_path: PlanPath = None,
+    income: Annotated[
+        float | None,
+        typer.Option(help="Extra take-home income per month (gets the annual raise)."),
+    ] = None,
+    expense: Annotated[float | None, typer.Option(help="Extra spending per month.")] = None,
+    start: Annotated[
+        str | None, typer.Option(help="First month, YYYY-MM. Defaults to the plan's start.")
+    ] = None,
+    end: Annotated[
+        str | None, typer.Option(help="Last month, YYYY-MM. Defaults to no end.")
+    ] = None,
+) -> None:
+    """Compare a plan with and without a recurring monthly income or expense change."""
+    plan = load_plan_or_exit(plan_path or DEMO_PLAN)
+    try:
+        result = simulate(plan, parse_change(income, expense, start, end))
+    except PlanError as error:
+        error_console.print(f"[red]error:[/red] {escape(str(error))}")
+        raise typer.Exit(code=2) from None
+    print_simulation(result)
 
 
 @app.command("app")
@@ -67,22 +94,40 @@ def _dollars(value: Decimal) -> str:
     return f"{value:,.0f}"
 
 
-def print_forecast(result: Forecast) -> None:
-    """Render a forecast as text tables."""
-    end = format_month(result.rows[-1].month)
+def _paid_off(result: Forecast, debt_name: str) -> str:
+    month = result.payoff[debt_name]
+    if month:
+        return format_month(month)
+    left = result.rows[-1].debts[debt_name]
+    return f"after {format_month(result.rows[-1].month)} ({_dollars(left)} left)"
+
+
+def _print_header(result: Forecast) -> None:
     console.print(
         f"[bold]cashpath: {escape(result.plan.name)}[/bold]   "
-        f"{format_month(result.plan.start)} to {end}\n"
+        f"{format_month(result.plan.start)} to {format_month(result.rows[-1].month)}"
     )
+
+
+def _print_warnings(warnings: tuple[str, ...], title: str = "Warnings") -> None:
+    if not warnings:
+        console.print(f"{title}: none")
+        return
+    console.print(f"[yellow]{title}[/yellow]")
+    for warning in warnings:
+        console.print(f"  {escape(warning)}")
+
+
+def print_forecast(result: Forecast) -> None:
+    """Render a forecast as text tables."""
+    _print_header(result)
+    console.print()
     if result.plan.debts:
         debts = Table(title="Debt-free dates", title_justify="left")
         for column in ("debt", "APR", "paid off"):
             debts.add_column(column, justify="left" if column == "debt" else "right")
         for debt in result.plan.debts:
-            month = result.payoff[debt.name]
-            left = result.rows[-1].debts[debt.name]
-            paid_off = format_month(month) if month else f"after {end} ({_dollars(left)} left)"
-            debts.add_row(escape(debt.name), f"{debt.apr}%", paid_off)
+            debts.add_row(escape(debt.name), f"{debt.apr}%", _paid_off(result, debt.name))
         console.print(debts)
 
     balances = Table(title="Balances", title_justify="left")
@@ -97,11 +142,39 @@ def print_forecast(result: Forecast) -> None:
             ),
         )
     console.print(balances)
-    console.print("Net worth counts cash and investments minus debt, not cars or homes.\n")
+    console.print(NET_WORTH_NOTE)
+    _print_warnings(result.warnings)
 
-    if not result.warnings:
-        console.print("Warnings: none")
-        return
-    console.print("[yellow]Warnings[/yellow]")
-    for warning in result.warnings:
-        console.print(f"  {escape(warning)}")
+
+def print_simulation(result: Simulation) -> None:
+    """Render the plan and the simulation side by side."""
+    base, simulated = result.plan, result.simulated
+    _print_header(base)
+    console.print(f"Simulation: {escape(describe_change(base.plan, result.change))}\n")
+    if base.plan.debts:
+        debts = Table(title="Debt-free dates", title_justify="left")
+        for column in ("debt", "APR", "plan", "simulation"):
+            debts.add_column(column, justify="left" if column == "debt" else "right")
+        for debt in base.plan.debts:
+            debts.add_row(
+                escape(debt.name),
+                f"{debt.apr}%",
+                _paid_off(base, debt.name),
+                _paid_off(simulated, debt.name),
+            )
+        console.print(debts)
+
+    net_worth = Table(title="Net worth", title_justify="left")
+    for column in ("", "plan", "simulation", "change"):
+        net_worth.add_column(column, justify="left" if not column else "right")
+    for (label, row), (_, simulated_row) in zip(snapshots(base), snapshots(simulated), strict=True):
+        change = simulated_row.net_worth - row.net_worth
+        net_worth.add_row(
+            label,
+            _dollars(row.net_worth),
+            _dollars(simulated_row.net_worth),
+            f"{change:+,.0f}" if round(change) else "0",
+        )
+    console.print(net_worth)
+    console.print(NET_WORTH_NOTE)
+    _print_warnings(simulated.warnings, "Warnings (simulation)")
