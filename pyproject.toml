@@ -1,6 +1,6 @@
 [project]
 name = "cashpath"
-version = "1.0.0"
+version = "1.0.1"
 description = "Budget forecasts from one YAML plan: debt payoff dates, savings priorities and net worth, month by month"
 readme = "README.md"
 license = "MIT"
