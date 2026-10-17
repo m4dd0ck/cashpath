@@ -36,3 +36,8 @@ jobs:
 
       - name: Forecast the demo plan
         run: uv run cashpath forecast
+
+      - name: Forecast from the built wheel
+        run: |
+          uv build --wheel
+          uv run --isolated --no-project --with dist/*.whl cashpath forecast
