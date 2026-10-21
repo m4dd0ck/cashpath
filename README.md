@@ -243,7 +243,7 @@ private/               # your own plan files; gitignored
 | Thing | Where | Notes |
 |---|---|---|
 | Live demo | Streamlit Community Cloud, from this repo's `main` | runs `streamlit_app.py`, installs from `uv.lock`; redeploys itself on push |
-| Your plan | `private/` in the checkout | gitignored; never committed, never uploaded |
+| Your plan | `private/` in the checkout | gitignored; never committed, never uploaded, and nothing backs it up: keep your own copy |
 
 ## Development
 

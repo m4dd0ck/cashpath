@@ -44,7 +44,7 @@ panel on the Streamlit Cloud dashboard.
 ## Restore on a new machine
 
 1. Clone the repo, `uv sync`.
-2. Copy a plan into `private/` (the folder is gitignored; create it). The demo plan works
+2. Copy a plan into `private/` from your own copy; there is none in git (the folder is gitignored; create it). The demo plan works
    without one.
 3. `uv run pytest`, then `uv run cashpath forecast`.
 
