@@ -263,4 +263,3 @@ then builds the wheel and forecasts from it. Licensed MIT (`LICENSE`).
 - `RUNBOOK.md`: run, release, deploy, restore.
 - `CLAUDE.md`: the agent rules.
 - `TASK.md`: what is open.
-- `~/developer/hq/CONVENTIONS.md`: the portfolio release and commit rules.

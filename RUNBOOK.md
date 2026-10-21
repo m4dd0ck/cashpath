@@ -27,8 +27,6 @@ a plan file from `private/` to run on real numbers. The app can also be started 
 
 ## Release
 
-Follows `~/developer/hq/CONVENTIONS.md` §Versioning.
-
 1. Bump `version` in `pyproject.toml` and `__version__` in `cashpath/__init__.py`, then
    `uv lock` (CI installs with `--locked`).
 2. Commit `chore: Release vX.Y.Z`, tag `git tag -a vX.Y.Z`, push `main` and the tag.
@@ -54,5 +52,4 @@ panel on the Streamlit Cloud dashboard.
 uv run ruff check . && uv run ruff format --check . && uv run mypy
 uv run pytest
 uv run cashpath forecast
-python3 ~/.claude/scripts/doc-check.py --repo .
 ```
